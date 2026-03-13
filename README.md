@@ -51,7 +51,7 @@ KONSIER_ENDPOINT_URL=https://your-public-domain.com/konsier
 Notes:
 
 - If `KONSIER_API_KEY` and `KONSIER_ENDPOINT_URL` are missing, the API still runs, but Konsier is disabled.
-- `KONSIER_ENDPOINT_URL` must be publicly reachable for webhook delivery.
+- `KONSIER_ENDPOINT_URL` must be publicly reachable for webhook delivery. You can use tools like `ngrok` for local development.
 
 ## 3) Run in Development
 
