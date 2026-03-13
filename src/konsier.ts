@@ -67,7 +67,8 @@ const createOrder = Konsier.tool({
   name: 'create_order',
   description: 'Creates a customer order from menu item IDs and quantities.',
   input: z.object({
-    customerName: z.string().min(1),
+    customerName: z.string().optional(),
+    customer_name: z.string().optional(),
     items: z.array(
       z.object({
         menuItemId: z.number().int().positive(),
@@ -75,7 +76,11 @@ const createOrder = Konsier.tool({
       })
     ).min(1),
   }),
-  handler: async (input) => {
+  handler: async (input, ctx) => {
+    const providedName = (input.customerName ?? input.customer_name ?? '').trim();
+    const contextName = (ctx.user.displayName ?? ctx.user.externalId ?? '').trim();
+    const customerName = providedName || contextName || `Customer ${ctx.user.id.slice(0, 8)}`;
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -84,7 +89,7 @@ const createOrder = Konsier.tool({
         `INSERT INTO orders (customer_name)
          VALUES ($1)
          RETURNING id, customer_name, total_amount, status, created_at`,
-        [input.customerName]
+        [customerName]
       );
 
       const order = orderResult.rows[0];
