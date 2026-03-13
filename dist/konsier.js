@@ -42,19 +42,23 @@ const createOrder = konsier_1.Konsier.tool({
     name: 'create_order',
     description: 'Creates a customer order from menu item IDs and quantities.',
     input: zod_1.z.object({
-        customerName: zod_1.z.string().min(1),
+        customerName: zod_1.z.string().optional(),
+        customer_name: zod_1.z.string().optional(),
         items: zod_1.z.array(zod_1.z.object({
             menuItemId: zod_1.z.number().int().positive(),
             quantity: zod_1.z.number().int().positive(),
         })).min(1),
     }),
-    handler: async (input) => {
+    handler: async (input, ctx) => {
+        const providedName = (input.customerName ?? input.customer_name ?? '').trim();
+        const contextName = (ctx.user.displayName ?? ctx.user.externalId ?? '').trim();
+        const customerName = providedName || contextName || `Customer ${ctx.user.id.slice(0, 8)}`;
         const client = await db_1.default.connect();
         try {
             await client.query('BEGIN');
             const orderResult = await client.query(`INSERT INTO orders (customer_name)
          VALUES ($1)
-         RETURNING id, customer_name, total_amount, status, created_at`, [input.customerName]);
+         RETURNING id, customer_name, total_amount, status, created_at`, [customerName]);
             const order = orderResult.rows[0];
             let totalAmount = 0;
             for (const item of input.items) {
